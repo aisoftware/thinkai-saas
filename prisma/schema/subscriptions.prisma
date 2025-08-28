@@ -1,0 +1,150 @@
+model SubscriptionProduct {
+  id                       String                        @id @default(cuid())
+  stripeId                 String
+  order                    Int
+  title                    String
+  active                   Boolean
+  model                    Int
+  public                   Boolean
+  groupTitle               String?
+  groupDescription         String?
+  description              String?
+  badge                    String?
+  billingAddressCollection String                        @default("auto")
+  hasQuantity              Boolean                       @default(false)
+  canBuyAgain              Boolean                       @default(false)
+  prices                   SubscriptionPrice[]
+  features                 SubscriptionFeature[]
+  tenantProducts           TenantSubscriptionProduct[]
+  usageBasedPrices         SubscriptionUsageBasedPrice[]
+  assignsTenantTypes       TenantType[]
+}
+
+model SubscriptionPrice {
+  id                    String                           @id @default(cuid())
+  subscriptionProductId String
+  subscriptionProduct   SubscriptionProduct              @relation(fields: [subscriptionProductId], references: [id], onDelete: Cascade)
+  stripeId              String
+  type                  Int
+  billingPeriod         Int
+  price                 Decimal
+  currency              String
+  trialDays             Int
+  active                Boolean
+  tenantProductPrices   TenantSubscriptionProductPrice[]
+}
+
+model SubscriptionUsageBasedPrice {
+  id                    String                           @id @default(cuid())
+  subscriptionProductId String
+  subscriptionProduct   SubscriptionProduct              @relation(fields: [subscriptionProductId], references: [id], onDelete: Cascade)
+  stripeId              String
+  billingPeriod         Int
+  currency              String
+  unit                  String
+  unitTitle             String
+  unitTitlePlural       String
+  usageType             String
+  aggregateUsage        String
+  tiersMode             String
+  billingScheme         String
+  tiers                 SubscriptionUsageBasedTier[]
+  tenantProductPrices   TenantSubscriptionProductPrice[]
+}
+
+model SubscriptionUsageBasedTier {
+  id                            String                      @id @default(cuid())
+  subscriptionUsageBasedPriceId String
+  subscriptionUsageBasedPrice   SubscriptionUsageBasedPrice @relation(fields: [subscriptionUsageBasedPriceId], references: [id], onDelete: Cascade)
+  from                          Int
+  to                            Int?
+  perUnitPrice                  Decimal?
+  flatFeePrice                  Decimal?
+}
+
+model SubscriptionFeature {
+  id                    String              @id @default(cuid())
+  subscriptionProductId String
+  order                 Int
+  title                 String
+  name                  String
+  type                  Int
+  value                 Int
+  href                  String?
+  badge                 String?
+  accumulate            Boolean             @default(false)
+  subscriptionProduct   SubscriptionProduct @relation(fields: [subscriptionProductId], references: [id], onDelete: Cascade)
+}
+
+model TenantSubscription {
+  id               String                      @id @default(cuid())
+  tenantId         String                      @unique
+  stripeCustomerId String?
+  tenant           Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products         TenantSubscriptionProduct[]
+}
+
+model TenantSubscriptionProduct {
+  id                    String                           @id @default(cuid())
+  createdAt             DateTime                         @default(now())
+  tenantSubscriptionId  String
+  subscriptionProductId String
+  cancelledAt           DateTime?
+  endsAt                DateTime?
+  stripeSubscriptionId  String?
+  quantity              Int?
+  fromCheckoutSessionId String?
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  tenantSubscription    TenantSubscription               @relation(fields: [tenantSubscriptionId], references: [id], onDelete: Cascade)
+  subscriptionProduct   SubscriptionProduct              @relation(fields: [subscriptionProductId], references: [id])
+  prices                TenantSubscriptionProductPrice[]
+}
+
+model TenantSubscriptionProductPrice {
+  id                            String                          @id @default(cuid())
+  tenantSubscriptionProductId   String
+  tenantSubscriptionProduct     TenantSubscriptionProduct       @relation(fields: [tenantSubscriptionProductId], references: [id], onDelete: Cascade)
+  subscriptionPriceId           String?
+  subscriptionPrice             SubscriptionPrice?              @relation(fields: [subscriptionPriceId], references: [id])
+  subscriptionUsageBasedPriceId String?
+  subscriptionUsageBasedPrice   SubscriptionUsageBasedPrice?    @relation(fields: [subscriptionUsageBasedPriceId], references: [id])
+  usageRecords                  TenantSubscriptionUsageRecord[]
+}
+
+model TenantSubscriptionUsageRecord {
+  id                               String                         @id @default(cuid())
+  tenantSubscriptionProductPriceId String
+  tenantSubscriptionProductPrice   TenantSubscriptionProductPrice @relation(fields: [tenantSubscriptionProductPriceId], references: [id], onDelete: Cascade)
+  timestamp                        Int
+  quantity                         Int
+  stripeSubscriptionItemId         String?
+}
+
+model CheckoutSessionStatus {
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  id              String   @unique
+  pending         Boolean  @default(true) // has not added products to tenant
+  email           String
+  fromUrl         String
+  fromUserId      String?
+  fromTenantId    String?
+  createdUserId   String?
+  createdTenantId String?
+}
+
+model Credit {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  amount    Int
+  type      String
+  objectId  String?
+
+  @@index([tenantId, userId])
+  @@index([tenantId, createdAt])
+}

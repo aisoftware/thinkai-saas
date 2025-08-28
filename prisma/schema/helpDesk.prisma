@@ -1,0 +1,68 @@
+model Feedback {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  fromUrl   String
+}
+
+model Survey {
+  id             String             @id @default(cuid())
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  tenantId       String?
+  tenant         Tenant?            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title          String
+  slug           String
+  description    String?
+  isEnabled      Boolean
+  isPublic       Boolean            @default(false)
+  minSubmissions Int                @default(0)
+  image          String?
+  items          SurveyItem[]
+  submissions    SurveySubmission[]
+}
+
+model SurveyItem {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  surveyId    String
+  survey      Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  shortName   String?
+  type        String
+  order       Int
+  categories  Json
+  href        String?
+  color       String?
+  options     Json
+  style       String?
+}
+
+model SurveySubmission {
+  id              String                   @id @default(cuid())
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  surveyId        String
+  survey          Survey                   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  userAnalyticsId String
+  ipAddress       String
+  results         SurveySubmissionResult[]
+}
+
+model SurveySubmissionResult {
+  id                 String           @id @default(cuid())
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  surveySubmissionId String
+  surveySubmission   SurveySubmission @relation(fields: [surveySubmissionId], references: [id], onDelete: Cascade)
+  surveItemTitle     String
+  surveItemType      String // single, multiple
+  value              Json
+  other              String?
+}

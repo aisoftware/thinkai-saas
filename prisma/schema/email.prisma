@@ -1,0 +1,125 @@
+model TenantInboundAddress {
+  id       String  @id @default(cuid())
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  address  String  @unique
+  email    Email[]
+}
+
+model Email {
+  id                     String                @id @default(cuid())
+  tenantInboundAddressId String?
+  tenantInboundAddress   TenantInboundAddress? @relation(fields: [tenantInboundAddressId], references: [id], onDelete: Cascade)
+  messageId              String                @unique
+  type                   String // inbound, outbound
+  date                   DateTime
+  subject                String
+  fromEmail              String
+  fromName               String?
+  toEmail                String
+  toName                 String?
+  textBody               String
+  htmlBody               String
+  reads                  EmailRead[]
+  attachments            EmailAttachment[]
+  cc                     EmailCc[]
+}
+
+model EmailRead {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  emailId   String
+  email     Email    @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailCc {
+  id      String  @id @default(cuid())
+  emailId String
+  toEmail String
+  toName  String?
+  email   Email   @relation(fields: [emailId], references: [id], onDelete: Cascade)
+}
+
+model EmailAttachment {
+  id              String  @id @default(cuid())
+  emailId         String
+  name            String
+  type            String
+  length          Int
+  content         String
+  publicUrl       String?
+  storageBucket   String?
+  storageProvider String?
+  email           Email   @relation(fields: [emailId], references: [id], onDelete: Cascade)
+}
+
+model EmailSender {
+  id             String          @id @default(cuid())
+  tenantId       String?
+  provider       String
+  stream         String
+  apiKey         String
+  fromEmail      String
+  fromName       String?
+  replyToEmail   String?
+  tenant         Tenant?         @relation(fields: [tenantId], references: [id])
+  campaigns      Campaign[]
+  outboundEmails OutboundEmail[]
+}
+
+model Campaign {
+  id            String          @id @default(cuid())
+  tenantId      String?
+  emailSenderId String
+  name          String
+  subject       String
+  htmlBody      String
+  textBody      String?
+  status        String          @default("draft")
+  track         Boolean
+  sentAt        DateTime?
+  emailSender   EmailSender     @relation(fields: [emailSenderId], references: [id])
+  recipients    OutboundEmail[]
+  tenant        Tenant?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model OutboundEmail {
+  id               String               @id @default(cuid())
+  createdAt        DateTime             @default(now())
+  tenantId         String?
+  tenant           Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaignId       String?
+  campaign         Campaign?            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contactRowId     String?
+  contactRow       Row?                 @relation(fields: [contactRowId], references: [id])
+  email            String
+  fromSenderId     String
+  isPreview        Boolean?
+  error            String?
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  bouncedAt        DateTime?
+  spamComplainedAt DateTime?
+  unsubscribedAt   DateTime?
+  fromSender       EmailSender          @relation(fields: [fromSenderId], references: [id])
+  opens            OutboundEmailOpen[]
+  clicks           OutboundEmailClick[]
+}
+
+model OutboundEmailOpen {
+  id              String        @id @default(cuid())
+  createdAt       DateTime      @default(now())
+  firstOpen       Boolean
+  outboundEmailId String
+  outboundEmail   OutboundEmail @relation(fields: [outboundEmailId], references: [id], onDelete: Cascade)
+}
+
+model OutboundEmailClick {
+  id              String        @id @default(cuid())
+  createdAt       DateTime      @default(now())
+  link            String
+  outboundEmailId String
+  outboundEmail   OutboundEmail @relation(fields: [outboundEmailId], references: [id], onDelete: Cascade)
+}

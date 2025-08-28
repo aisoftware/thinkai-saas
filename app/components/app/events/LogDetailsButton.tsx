@@ -1,0 +1,48 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import Modal from "~/components/ui/modals/Modal";
+import { LogWithDetails } from "~/utils/db/logs.db.server";
+
+export default function LogDetailsButton({ item }: { item: LogWithDetails }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+
+  function stringifyDetails() {
+    try {
+      return JSON.stringify(JSON.parse(item.details?.toString() ?? "{}"), null, "\t");
+    } catch (e) {
+      return item.details;
+    }
+  }
+  return (
+    <>
+      <div className="flex space-x-2">
+        {item.details !== null && (
+          <button type="button" onClick={() => setOpen(true)} className="hover:text-foreground italic underline">
+            {t("models.log.details")}
+          </button>
+        )}
+      </div>
+
+      <Modal className="sm:max-w-md" open={open} setOpen={setOpen}>
+        <div className="flex justify-between space-x-2">
+          <div className="text-foreground text-lg font-medium">Details</div>
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(item.details ?? "");
+              }}
+              className="bg-theme-100 text-theme-700 hover:bg-theme-200 focus:ring-ring inline-flex items-center rounded-md border border-transparent px-3 py-2 text-sm font-medium leading-4 focus:outline-hidden focus:ring-2 focus:ring-offset-2"
+            >
+              {t("shared.copy")}
+            </button>
+          </div>
+        </div>
+        <div className="prose bg-foreground/90 border-border mt-2 rounded-lg border-2 border-dashed">
+          <pre>{stringifyDetails()}</pre>
+        </div>
+      </Modal>
+    </>
+  );
+}

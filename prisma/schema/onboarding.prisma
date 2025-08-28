@@ -1,0 +1,83 @@
+model Onboarding {
+  id             String              @id @default(cuid())
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  title          String
+  type           String // modal, page
+  realtime       Boolean             @default(false)
+  active         Boolean             @default(false)
+  canBeDismissed Boolean             @default(true)
+  height         String?
+  filters        OnboardingFilter[]
+  steps          OnboardingStep[]
+  sessions       OnboardingSession[]
+}
+
+model OnboardingFilter {
+  id           String                         @id @default(cuid())
+  createdAt    DateTime                       @default(now())
+  onboardingId String
+  onboarding   Onboarding                     @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  type         String
+  value        String?
+  matches      OnboardingSessionFilterMatch[]
+}
+
+model OnboardingStep {
+  id           String                  @id @default(cuid())
+  onboardingId String
+  onboarding   Onboarding              @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  order        Int
+  block        String
+  sessionSteps OnboardingSessionStep[]
+}
+
+model OnboardingSession {
+  id              String                         @id @default(cuid())
+  createdAt       DateTime                       @default(now())
+  updatedAt       DateTime                       @updatedAt
+  onboardingId    String
+  onboarding      Onboarding                     @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId        String?
+  tenant          Tenant?                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  status          String // active, completed, dismissed
+  startedAt       DateTime?
+  completedAt     DateTime?
+  dismissedAt     DateTime?
+  createdRealtime Boolean                        @default(false)
+  matches         OnboardingSessionFilterMatch[]
+  sessionSteps    OnboardingSessionStep[]
+  actions         OnboardingSessionAction[]
+
+  @@unique([onboardingId, userId, tenantId])
+}
+
+model OnboardingSessionAction {
+  id                  String            @id @default(cuid())
+  createdAt           DateTime          @default(now())
+  onboardingSessionId String
+  onboardingSession   OnboardingSession @relation(fields: [onboardingSessionId], references: [id], onDelete: Cascade)
+  type                String
+  name                String
+  value               String
+}
+
+model OnboardingSessionFilterMatch {
+  id                  String            @id @default(cuid())
+  onboardingFilterId  String
+  onboardingFilter    OnboardingFilter  @relation(fields: [onboardingFilterId], references: [id], onDelete: Cascade)
+  onboardingSessionId String
+  onboardingSession   OnboardingSession @relation(fields: [onboardingSessionId], references: [id], onDelete: Cascade)
+}
+
+model OnboardingSessionStep {
+  id                  String            @id @default(cuid())
+  onboardingSessionId String
+  onboardingSession   OnboardingSession @relation(fields: [onboardingSessionId], references: [id], onDelete: Cascade)
+  stepId              String
+  step                OnboardingStep    @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  seenAt              DateTime?
+  completedAt         DateTime?
+}

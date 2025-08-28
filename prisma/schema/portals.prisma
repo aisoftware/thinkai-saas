@@ -1,0 +1,217 @@
+model Portal {
+  id                                 String                               @id @default(cuid())
+  createdAt                          DateTime                             @default(now())
+  updatedAt                          DateTime                             @updatedAt
+  tenantId                           String?
+  tenant                             Tenant?                              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdByUserId                    String?
+  createdByUser                      User?                                @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  subdomain                          String                               @unique
+  domain                             String?                              @unique
+  title                              String
+  isPublished                        Boolean                              @default(false)
+  stripeAccountId                    String?
+  themeColor                         String?
+  themeScheme                        String?
+  seoTitle                           String?
+  seoDescription                     String?
+  seoImage                           String?
+  seoThumbnail                       String?
+  seoTwitterCreator                  String?
+  seoTwitterSite                     String?
+  seoKeywords                        String?
+  authRequireEmailVerification       Boolean                              @default(false)
+  authRequireOrganization            Boolean                              @default(true)
+  authRequireName                    Boolean                              @default(true)
+  analyticsSimpleAnalytics           Boolean                              @default(false)
+  analyticsPlausibleAnalytics        Boolean                              @default(false)
+  analyticsGoogleAnalyticsTrackingId String?
+  brandingLogo                       String?
+  brandingLogoDarkMode               String?
+  brandingIcon                       String?
+  brandingIconDarkMode               String?
+  brandingFavicon                    String?
+  affiliatesRewardfulApiKey          String?
+  affiliatesRewardfulUrl             String?
+  metadata                           Json?
+  users                              PortalUser[]
+  pages                              PortalPage[]
+  registrations                      PortalUserRegistration[]
+  subscriptionProducts               PortalSubscriptionProduct[]
+  subscriptionPrices                 PortalSubscriptionPrice[]
+  subscriptionFeatures               PortalSubscriptionFeature[]
+  userSubscriptions                  PortalUserSubscription[]
+  userSubscriptionProducts           PortalUserSubscriptionProduct[]
+  userSubscriptionProductPrices      PortalUserSubscriptionProductPrice[]
+  checkoutSessionStatus              PortalCheckoutSessionStatus[]
+  analyticsUniqueVisitors            AnalyticsUniqueVisitor[]
+  analyticsPageViews                 AnalyticsPageView[]
+  analyticsEvents                    AnalyticsEvent[]
+}
+
+model PortalUser {
+  id                      String                   @id @default(cuid())
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  tenantId                String?
+  tenant                  Tenant?                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  portalId                String
+  portal                  Portal                   @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  email                   String
+  passwordHash            String
+  firstName               String
+  lastName                String
+  avatar                  String?
+  phone                   String?
+  verifyToken             String?
+  githubId                String?
+  googleId                String?
+  locale                  String?
+  fromRegistration        PortalUserRegistration?
+  analyticsUniqueVisitors AnalyticsUniqueVisitor[]
+  analyticsPageViews      AnalyticsPageView[]
+  analyticsEvents         AnalyticsEvent[]
+  subscription            PortalUserSubscription?
+
+  @@unique([portalId, email])
+  @@unique([portalId, githubId])
+  @@unique([portalId, googleId])
+  @@index([portalId])
+}
+
+model PortalPage {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  portalId   String
+  portal     Portal   @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  name       String
+  attributes Json?
+
+  @@unique([portalId, name])
+}
+
+model PortalUserRegistration {
+  id                          String      @id @default(cuid())
+  createdAt                   DateTime    @default(now())
+  portalId                    String
+  portal                      Portal      @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  email                       String
+  firstName                   String
+  lastName                    String
+  slug                        String?
+  token                       String      @unique
+  ipAddress                   String?
+  company                     String?
+  selectedSubscriptionPriceId String?
+  createdPortalUserId         String?     @unique
+  createdPortalUser           PortalUser? @relation(fields: [createdPortalUserId], references: [id], onDelete: Cascade)
+
+  @@unique([portalId, email])
+}
+
+model PortalSubscriptionProduct {
+  id                       String                          @id @default(cuid())
+  portalId                 String
+  portal                   Portal                          @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  stripeId                 String
+  order                    Int
+  title                    String
+  active                   Boolean
+  model                    Int
+  public                   Boolean
+  groupTitle               String?
+  groupDescription         String?
+  description              String?
+  badge                    String?
+  billingAddressCollection String                          @default("auto")
+  hasQuantity              Boolean                         @default(false)
+  canBuyAgain              Boolean                         @default(false)
+  prices                   PortalSubscriptionPrice[]
+  features                 PortalSubscriptionFeature[]
+  portalUserProducts       PortalUserSubscriptionProduct[]
+}
+
+model PortalSubscriptionPrice {
+  id                      String                               @id @default(cuid())
+  portalId                String
+  portal                  Portal                               @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  subscriptionProductId   String
+  subscriptionProduct     PortalSubscriptionProduct            @relation(fields: [subscriptionProductId], references: [id], onDelete: Cascade)
+  stripeId                String
+  type                    Int
+  billingPeriod           Int
+  price                   Decimal
+  currency                String
+  trialDays               Int
+  active                  Boolean
+  portalUserProductPrices PortalUserSubscriptionProductPrice[]
+}
+
+model PortalSubscriptionFeature {
+  id                    String                    @id @default(cuid())
+  portalId              String
+  portal                Portal                    @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  subscriptionProductId String
+  order                 Int
+  title                 String
+  name                  String
+  type                  Int
+  value                 Int
+  href                  String?
+  badge                 String?
+  accumulate            Boolean                   @default(false)
+  subscriptionProduct   PortalSubscriptionProduct @relation(fields: [subscriptionProductId], references: [id], onDelete: Cascade)
+}
+
+model PortalUserSubscription {
+  id               String                          @id @default(cuid())
+  portalId         String
+  portal           Portal                          @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  portalUserId     String                          @unique
+  stripeCustomerId String?
+  portalUser       PortalUser                      @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+  products         PortalUserSubscriptionProduct[]
+}
+
+model PortalUserSubscriptionProduct {
+  id                       String                               @id @default(cuid())
+  portalId                 String
+  portal                   Portal                               @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  createdAt                DateTime                             @default(now())
+  portalUserSubscriptionId String
+  subscriptionProductId    String
+  cancelledAt              DateTime?
+  endsAt                   DateTime?
+  stripeSubscriptionId     String?
+  quantity                 Int?
+  fromCheckoutSessionId    String?
+  currentPeriodStart       DateTime?
+  currentPeriodEnd         DateTime?
+  portalUserSubscription   PortalUserSubscription               @relation(fields: [portalUserSubscriptionId], references: [id], onDelete: Cascade)
+  subscriptionProduct      PortalSubscriptionProduct            @relation(fields: [subscriptionProductId], references: [id])
+  prices                   PortalUserSubscriptionProductPrice[]
+}
+
+model PortalUserSubscriptionProductPrice {
+  id                              String                        @id @default(cuid())
+  portalId                        String
+  portal                          Portal                        @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  portalUserSubscriptionProductId String
+  portalUserSubscriptionProduct   PortalUserSubscriptionProduct @relation(fields: [portalUserSubscriptionProductId], references: [id], onDelete: Cascade)
+  subscriptionPriceId             String?
+  subscriptionPrice               PortalSubscriptionPrice?      @relation(fields: [subscriptionPriceId], references: [id])
+}
+
+model PortalCheckoutSessionStatus {
+  id            String   @unique
+  portalId      String
+  portal        Portal   @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  pending       Boolean  @default(true) // has not added products to tenant
+  email         String
+  fromUrl       String
+  fromUserId    String?
+  createdUserId String?
+}

@@ -1,0 +1,127 @@
+model KnowledgeBase {
+  id              String                  @id @default(cuid())
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  basePath        String
+  slug            String
+  title           String
+  description     String
+  defaultLanguage String
+  layout          String
+  color           Int
+  enabled         Boolean
+  languages       String
+  links           String
+  logo            String
+  seoImage        String
+  categories      KnowledgeBaseCategory[]
+  articles        KnowledgeBaseArticle[]
+  views           KnowledgeBaseViews[]
+
+  @@unique([slug])
+}
+
+model KnowledgeBaseCategory {
+  id              String                         @id @default(cuid())
+  knowledgeBaseId String
+  knowledgeBase   KnowledgeBase                  @relation(fields: [knowledgeBaseId], references: [id])
+  slug            String
+  order           Int
+  title           String
+  description     String
+  icon            String
+  language        String
+  seoImage        String
+  sections        KnowledgeBaseCategorySection[]
+  articles        KnowledgeBaseArticle[]
+
+  @@unique([knowledgeBaseId, slug])
+}
+
+model KnowledgeBaseCategorySection {
+  id          String                 @id @default(cuid())
+  categoryId  String
+  category    KnowledgeBaseCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  order       Int
+  title       String
+  description String
+  articles    KnowledgeBaseArticle[]
+}
+
+model KnowledgeBaseArticle {
+  id                     String                          @id @default(cuid())
+  createdAt              DateTime                        @default(now())
+  updatedAt              DateTime?                       @updatedAt
+  knowledgeBaseId        String
+  knowledgeBase          KnowledgeBase                   @relation(fields: [knowledgeBaseId], references: [id])
+  categoryId             String?
+  category               KnowledgeBaseCategory?          @relation(fields: [categoryId], references: [id])
+  sectionId              String?
+  section                KnowledgeBaseCategorySection?   @relation(fields: [sectionId], references: [id])
+  slug                   String
+  title                  String
+  description            String
+  order                  Int
+  contentDraft           String
+  contentPublished       String                          @default("")
+  contentPublishedAsText String                          @default("")
+  contentType            String
+  language               String
+  featuredOrder          Int?
+  seoImage               String
+  publishedAt            DateTime?
+  relatedInArticleId     String?
+  createdByUserId        String?
+  createdByUser          User?                           @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  views                  KnowledgeBaseArticleViews[]
+  upvotes                KnowledgeBaseArticleUpvotes[]
+  downvotes              KnowledgeBaseArticleDownvotes[]
+  relatedArticles        KnowledgeBaseRelatedArticle[]   @relation(name: "relatedArticles")
+  relatedInArticles      KnowledgeBaseRelatedArticle[]   @relation(name: "relatedInArticles")
+
+  @@unique([knowledgeBaseId, slug])
+}
+
+model KnowledgeBaseRelatedArticle {
+  id               String               @id @default(cuid())
+  articleId        String
+  article          KnowledgeBaseArticle @relation(name: "relatedArticles", fields: [articleId], references: [id], onDelete: Cascade)
+  relatedArticle   KnowledgeBaseArticle @relation(name: "relatedInArticles", fields: [relatedArticleId], references: [id], onDelete: Cascade)
+  relatedArticleId String
+}
+
+model KnowledgeBaseViews {
+  id              String        @id @default(cuid())
+  createdAt       DateTime      @default(now())
+  knowledgeBaseId String
+  knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  userAnalyticsId String
+
+  @@unique([knowledgeBaseId, userAnalyticsId])
+}
+
+model KnowledgeBaseArticleViews {
+  knowledgeBaseArticleId String
+  knowledgeBaseArticle   KnowledgeBaseArticle @relation(fields: [knowledgeBaseArticleId], references: [id], onDelete: Cascade)
+  userAnalyticsId        String
+
+  @@unique([knowledgeBaseArticleId, userAnalyticsId])
+}
+
+model KnowledgeBaseArticleUpvotes {
+  createdAt              DateTime             @default(now())
+  knowledgeBaseArticleId String
+  knowledgeBaseArticle   KnowledgeBaseArticle @relation(fields: [knowledgeBaseArticleId], references: [id], onDelete: Cascade)
+  userAnalyticsId        String
+
+  @@unique([knowledgeBaseArticleId, userAnalyticsId])
+}
+
+model KnowledgeBaseArticleDownvotes {
+  createdAt              DateTime             @default(now())
+  knowledgeBaseArticleId String
+  knowledgeBaseArticle   KnowledgeBaseArticle @relation(fields: [knowledgeBaseArticleId], references: [id], onDelete: Cascade)
+  userAnalyticsId        String
+
+  @@unique([knowledgeBaseArticleId, userAnalyticsId])
+}

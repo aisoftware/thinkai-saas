@@ -1,0 +1,212 @@
+model AppConfiguration {
+  id                                     String   @id @default(cuid())
+  updatedAt                              DateTime @updatedAt
+  name                                   String
+  url                                    String
+  theme                                  String?
+  authRequireEmailVerification           Boolean  @default(false)
+  authRequireOrganization                Boolean  @default(true)
+  authRequireName                        Boolean  @default(true)
+  authRecaptchaSiteKey                   String?
+  analyticsEnabled                       Boolean  @default(true)
+  analyticsSimpleAnalytics               Boolean  @default(false)
+  analyticsPlausibleAnalytics            Boolean  @default(false)
+  analyticsGoogleAnalyticsTrackingId     String?
+  subscriptionRequired                   Boolean  @default(true)
+  subscriptionAllowSubscribeBeforeSignUp Boolean  @default(true)
+  subscriptionAllowSignUpBeforeSubscribe Boolean  @default(true)
+  cookiesEnabled                         Boolean  @default(false)
+  metricsEnabled                         Boolean  @default(false)
+  metricsLogToConsole                    Boolean  @default(false)
+  metricsSaveToDatabase                  Boolean  @default(false)
+  metricsIgnoreUrls                      String?
+  brandingLogo                           String?
+  brandingLogoDarkMode                   String?
+  brandingIcon                           String?
+  brandingIconDarkMode                   String?
+  brandingFavicon                        String?
+  headScripts                            String?
+  bodyScripts                            String?
+  emailProvider                          String?
+  emailFromEmail                         String?
+  emailFromName                          String?
+  emailSupportEmail                      String?
+}
+
+model Log {
+  id          String             @id @default(cuid())
+  createdAt   DateTime           @default(now())
+  tenantId    String?
+  userId      String?
+  apiKeyId    String?
+  rowId       String?
+  url         String
+  action      String
+  details     String?
+  commentId   String?
+  apiKey      ApiKey?            @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  comment     RowComment?        @relation(fields: [commentId], references: [id])
+  row         Row?               @relation(fields: [rowId], references: [id])
+  tenant      Tenant?            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  webhookLogs EntityWebhookLog[]
+}
+
+model ApiKey {
+  id                String            @id @default(cuid())
+  createdAt         DateTime          @default(now())
+  createdByUserId   String
+  tenantId          String
+  key               String            @default(uuid())
+  alias             String
+  expires           DateTime?
+  active            Boolean
+  createdByUser     User              @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entities          ApiKeyEntity[]
+  apiKeyLogs        ApiKeyLog[]
+  logs              Log[]
+  createdRows       Row[]
+  tenantIpAddresses TenantIpAddress[]
+
+  @@unique([tenantId, alias])
+  @@unique([tenantId, key])
+  @@index([key])
+}
+
+model ApiKeyLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  apiKeyId  String?
+  apiKey    ApiKey?  @relation(fields: [apiKeyId], references: [id])
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ip        String
+  endpoint  String
+  method    String
+  params    String
+  status    Int?
+  duration  Int?
+  error     String?
+  type      String?
+
+  @@index([tenantId], name: "api_key_log_tenant")
+  @@index([tenantId, createdAt], name: "api_key_log_tenant_created_at")
+  @@index([tenantId, type], name: "api_key_log_tenant_type")
+}
+
+model Event {
+  id          String                @id @default(cuid())
+  createdAt   DateTime              @default(now())
+  tenantId    String?
+  tenant      Tenant?               @relation(fields: [tenantId], references: [id])
+  userId      String?
+  user        User?                 @relation(fields: [userId], references: [id])
+  name        String
+  data        String
+  resource    String?
+  description String?
+  attempts    EventWebhookAttempt[]
+}
+
+model EventWebhookAttempt {
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
+  eventId    String
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  endpoint   String
+  success    Boolean?
+  status     Int?
+  message    String?
+  body       String?
+}
+
+model MetricLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  env       String
+  type      String // loader, action
+  route     String
+  url       String
+  function  String
+  duration  Int
+  userId    String?
+  tenantId  String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model FileUploadProgress {
+  id              String      @id @default(cuid())
+  fileName        String
+  progressServer  Int
+  progressStorage Int
+  url             String?
+  error           String?
+  chunks          FileChunk[]
+}
+
+model FileChunk {
+  id           Int                @id @default(autoincrement())
+  fileUploadId String
+  fileUpload   FileUploadProgress @relation(fields: [fileUploadId], references: [id], onDelete: Cascade)
+  index        Int
+  data         Bytes
+}
+
+model IpAddress {
+  id          String         @id @default(cuid())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  ip          String         @unique
+  provider    String
+  type        String
+  countryCode String
+  countryName String
+  regionCode  String
+  regionName  String
+  city        String
+  zipCode     String
+  latitude    Decimal?
+  longitude   Decimal?
+  metadata    String
+  logs        IpAddressLog[]
+}
+
+model IpAddressLog {
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  ip          String
+  url         String
+  action      String
+  description String
+  success     Boolean
+  error       String?
+  metadata    String?
+  ipAddressId String?
+  ipAddress   IpAddress? @relation(fields: [ipAddressId], references: [id])
+}
+
+model Widget {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenantId   String?
+  name       String
+  appearance String
+  metadata   String
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+}
+
+model Credential {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  value     Json
+}

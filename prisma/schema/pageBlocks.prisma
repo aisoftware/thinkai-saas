@@ -1,0 +1,32 @@
+model Page {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  slug        String
+  isPublished Boolean       @default(false)
+  isPublic    Boolean       @default(false)
+  metaTags    PageMetaTag[]
+  blocks      PageBlock[]
+
+  @@unique([slug])
+}
+
+model PageMetaTag {
+  id     String  @id @default(cuid())
+  pageId String?
+  page   Page?   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  order  Int?
+  name   String
+  value  String
+
+  @@unique([pageId, name, value])
+}
+
+model PageBlock {
+  id     String @id @default(cuid())
+  pageId String
+  page   Page   @relation(fields: [pageId], references: [id])
+  order  Int
+  type   String // hero, gallery, logoClouds, video...
+  value  String
+}

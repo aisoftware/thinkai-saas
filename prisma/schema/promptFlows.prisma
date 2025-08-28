@@ -1,0 +1,131 @@
+model PromptFlowGroup {
+  id          String                    @id @default(cuid())
+  createdAt   DateTime                  @default(now())
+  order       Int
+  title       String
+  description String
+  templates   PromptFlowGroupTemplate[]
+  promptFlows PromptFlow[]
+  entities    PromptFlowGroupEntity[]
+}
+
+model PromptFlowGroupTemplate {
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now())
+  order             Int
+  title             String
+  promptFlowGroupId String
+  promptFlowGroup   PromptFlowGroup @relation(fields: [promptFlowGroupId], references: [id], onDelete: Cascade)
+}
+
+model PromptFlowGroupEntity {
+  entityId          String
+  entity            Entity          @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  promptFlowGroupId String
+  promptFlowGroup   PromptFlowGroup @relation(fields: [promptFlowGroupId], references: [id], onDelete: Cascade)
+
+  @@id([entityId, promptFlowGroupId])
+}
+
+model PromptFlow {
+  id                String                    @id @default(cuid())
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  model             String // gpt-3.5-turbo, gpt-4...
+  title             String
+  description       String
+  actionTitle       String?
+  executionType     String                    @default("sequential") // sequential, parallel
+  promptFlowGroupId String?
+  stream            Boolean                   @default(false)
+  public            Boolean                   @default(true)
+  inputVariables    PromptFlowInputVariable[]
+  inputEntityId     String?
+  inputEntity       Entity?                   @relation(fields: [inputEntityId], references: [id], onDelete: Cascade)
+  promptFlowGroup   PromptFlowGroup?          @relation(fields: [promptFlowGroupId], references: [id], onDelete: Cascade)
+  templates         PromptTemplate[]
+  executions        PromptFlowExecution[]
+  outputs           PromptFlowOutput[]
+}
+
+model PromptFlowInputVariable {
+  id           String     @id @default(cuid())
+  promptFlowId String
+  promptFlow   PromptFlow @relation(fields: [promptFlowId], references: [id], onDelete: Cascade)
+  type         String
+  name         String
+  title        String
+  isRequired   Boolean
+}
+
+model PromptTemplate {
+  id                   String                    @id @default(cuid())
+  flowId               String
+  flow                 PromptFlow                @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  order                Int
+  title                String
+  template             String
+  temperature          Decimal
+  maxTokens            Int?
+  generations          Int?
+  results              PromptTemplateResult[]
+  inPromptFlowMappings PromptFlowOutputMapping[]
+}
+
+model PromptFlowOutput {
+  id           String                    @id @default(cuid())
+  promptFlowId String
+  promptFlow   PromptFlow                @relation(fields: [promptFlowId], references: [id], onDelete: Cascade)
+  type         String
+  entityId     String
+  entity       Entity                    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  mappings     PromptFlowOutputMapping[]
+}
+
+model PromptFlowOutputMapping {
+  id                 String           @id @default(cuid())
+  promptFlowOutputId String
+  promptFlowOutput   PromptFlowOutput @relation(fields: [promptFlowOutputId], references: [id], onDelete: Cascade)
+  promptTemplateId   String
+  promptTemplate     PromptTemplate   @relation(fields: [promptTemplateId], references: [id], onDelete: Cascade)
+  propertyId         String
+  property           Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([promptFlowOutputId, promptTemplateId, propertyId])
+}
+
+model PromptFlowExecution {
+  id          String                 @id @default(cuid())
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  flowId      String
+  flow        PromptFlow             @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  model       String?
+  userId      String?
+  user        User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId    String?
+  tenant      Tenant?                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  status      String // pending, running, success, error
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  duration    Int?
+  results     PromptTemplateResult[]
+}
+
+model PromptTemplateResult {
+  id              String              @id @default(cuid())
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  flowExecutionId String
+  flowExecution   PromptFlowExecution @relation(fields: [flowExecutionId], references: [id])
+  templateId      String?
+  template        PromptTemplate?     @relation(fields: [templateId], references: [id])
+  order           Int
+  status          String // pending, running, success, error
+  prompt          String
+  response        String?
+  error           String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+}

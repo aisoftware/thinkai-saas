@@ -1,0 +1,68 @@
+model AnalyticsSettings {
+  id          String  @id @default(cuid())
+  public      Boolean @default(false)
+  ignorePages String
+  onlyPages   String
+}
+
+model AnalyticsUniqueVisitor {
+  id             String              @id @default(cuid())
+  createdAt      DateTime            @default(now())
+  cookie         String              @unique
+  via            String?
+  httpReferrer   String?
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+  device         String?
+  source         String?
+  medium         String?
+  campaign       String?
+  content        String?
+  term           String?
+  country        String?
+  city           String?
+  fromUrl        String?
+  fromRoute      String?
+  pageViews      AnalyticsPageView[]
+  events         AnalyticsEvent[]
+  userId         String?
+  user           User?               @relation(fields: [userId], references: [id])
+  portalId       String?
+  portal         Portal?             @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  portalUserId   String?
+  portalUser     PortalUser?         @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsPageView {
+  id              String                 @id @default(cuid())
+  createdAt       DateTime               @default(now())
+  uniqueVisitorId String
+  uniqueVisitor   AnalyticsUniqueVisitor @relation(fields: [uniqueVisitorId], references: [id], onDelete: Cascade)
+  url             String
+  route           String?
+  portalId        String?
+  portal          Portal?                @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  portalUserId    String?
+  portalUser      PortalUser?            @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsEvent {
+  id              String                 @id @default(cuid())
+  createdAt       DateTime               @default(now())
+  uniqueVisitorId String
+  uniqueVisitor   AnalyticsUniqueVisitor @relation(fields: [uniqueVisitorId], references: [id], onDelete: Cascade)
+  action          String
+  category        String?
+  label           String?
+  value           String?
+  url             String?
+  route           String?
+  featureFlagId   String?
+  featureFlag     FeatureFlag?           @relation(fields: [featureFlagId], references: [id])
+  portalId        String?
+  portal          Portal?                @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  portalUserId    String?
+  portalUser      PortalUser?            @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+}

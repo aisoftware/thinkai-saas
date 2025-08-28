@@ -1,0 +1,190 @@
+model User {
+  id                         String                   @id @default(cuid())
+  createdAt                  DateTime                 @default(now())
+  updatedAt                  DateTime                 @updatedAt
+  email                      String                   @unique
+  passwordHash               String
+  firstName                  String
+  lastName                   String
+  avatar                     String?
+  phone                      String?
+  defaultTenantId            String?
+  verifyToken                String?
+  githubId                   String?                  @unique
+  googleId                   String?                  @unique
+  locale                     String?
+  active                     Boolean                  @default(false)
+  admin                      AdminUser? // Has access to the admin panel
+  createdApiKeys             ApiKey[]
+  createdGroups              Group[]
+  groups                     GroupUser[]
+  logs                       Log[]
+  createdRows                Row[]
+  createdRowComments         RowComment[]
+  createdRowCommentReactions RowCommentReaction[]
+  createdEntityViews         EntityView[]             @relation("createdByUser")
+  rowPermissions             RowPermission[]
+  assignedTasks              RowTask[]                @relation("assignedToUser")
+  completedTasks             RowTask[]                @relation("completedByUser")
+  createdRowTasks            RowTask[]                @relation("createdByUser")
+  tenants                    TenantUser[]
+  invitation                 TenantUserInvitation?    @relation("createdUser")
+  sentInvitations            TenantUserInvitation[]   @relation("fromUser")
+  roles                      UserRole[]
+  readEmails                 EmailRead[]
+  entityViews                EntityView[]
+  onboardingSessions         OnboardingSession[]
+  tenantIpAddresses          TenantIpAddress[]
+  promptFlowExecutions       PromptFlowExecution[]
+  analyticsUniqueSessions    AnalyticsUniqueVisitor[]
+  metricLogs                 MetricLog[]
+  formulaLogs                FormulaLog[]
+  blogArticles               BlogPost[]
+  knowledgeBaseArticles      KnowledgeBaseArticle[]
+  events                     Event[]
+  workflowsCreated           Workflow[]               @relation("createdByUser")
+  workflowsExecuted          WorkflowExecution[]      @relation("executedByUser")
+  workflowVariablesCreated   WorkflowVariable[]
+  workflowCredentialsCreated WorkflowCredential[]
+  feedback                   Feedback[]
+  credits                    Credit[]
+  portals                    Portal[]
+}
+
+// Has access to the admin panel
+model AdminUser {
+  userId String @id @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tenant {
+  id                        String                     @id @default(cuid())
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  slug                      String                     @unique
+  name                      String
+  icon                      String?
+  subscriptionId            String?
+  active                    Boolean                    @default(false)
+  deactivatedReason         String?
+  apiKeys                   ApiKey[]
+  apiKeyLogs                ApiKeyLog[]
+  groups                    Group[]
+  logs                      Log[]
+  rows                      Row[]
+  rowPermissions            RowPermission[]
+  subscription              TenantSubscription?
+  users                     TenantUser[]
+  invitations               TenantUserInvitation[]
+  userRoles                 UserRole[]
+  inboundAddresses          TenantInboundAddress[]
+  events                    Event[]
+  fromRegistration          Registration?
+  entityViews               EntityView[]
+  emailSenders              EmailSender[]
+  campaigns                 Campaign[]
+  outboundEmails            OutboundEmail[]
+  onboardingSessions        OnboardingSession[]
+  ipAddresses               TenantIpAddress[]
+  tenantSettingsRow         TenantSettingsRow?
+  promptFlowExecutions      PromptFlowExecution[]
+  metricLogs                MetricLog[]
+  formulaLogs               FormulaLog[]
+  types                     TenantType[]
+  entityProperties          Property[]
+  blogPosts                 BlogPost[]
+  blogTags                  BlogTag[]
+  blogCategories            BlogCategory[]
+  entityGroupConfigurations EntityGroupConfiguration[]
+  entityTemplates           EntityTemplate[]
+  workflows                 Workflow[]
+  workflowExecutions        WorkflowExecution[]
+  workflowVariables         WorkflowVariable[]
+  workflowCredentials       WorkflowCredential[]
+  feedback                  Feedback[]
+  credits                   Credit[]
+  portals                   Portal[]
+  portalsUsers              PortalUser[]
+  surveys                   Survey[]
+  widgets                   Widget[]
+
+  @@index([slug])
+}
+
+model TenantUser {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  tenantId  String
+  userId    String
+  type      Int
+  joined    Int
+  status    Int
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TenantUserInvitation {
+  id            String  @id @default(cuid())
+  tenantId      String
+  email         String
+  firstName     String
+  lastName      String
+  type          Int
+  pending       Boolean
+  createdUserId String? @unique
+  fromUserId    String?
+  fromUser      User?   @relation(name: "fromUser", fields: [fromUserId], references: [id])
+  user          User?   @relation(name: "createdUser", fields: [createdUserId], references: [id])
+  tenant        Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Registration {
+  id                          String   @id @default(cuid())
+  createdAt                   DateTime @default(now())
+  email                       String   @unique
+  firstName                   String
+  lastName                    String
+  slug                        String?
+  token                       String   @unique
+  ipAddress                   String?
+  company                     String?
+  selectedSubscriptionPriceId String?
+  createdTenantId             String?  @unique
+  createdTenant               Tenant?  @relation(fields: [createdTenantId], references: [id], onDelete: Cascade)
+}
+
+model Blacklist {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  type             String // email, domain, ip
+  value            String
+  active           Boolean  @default(true)
+  registerAttempts Int      @default(0)
+}
+
+model TenantIpAddress {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeyId  String?
+  apiKey    ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  ip        String
+  fromUrl   String
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, ip, userId, apiKeyId])
+}
+
+model TenantType {
+  id                   String                @id @default(cuid())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  title                String                @unique
+  titlePlural          String
+  description          String?
+  isDefault            Boolean               @default(false)
+  tenants              Tenant[]
+  subscriptionProducts SubscriptionProduct[]
+}

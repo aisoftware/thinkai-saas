@@ -1,0 +1,22 @@
+model FeatureFlag {
+  id          String              @id @default(cuid())
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  name        String
+  description String
+  enabled     Boolean             @default(false)
+  events      AnalyticsEvent[]
+  filters     FeatureFlagFilter[]
+
+  @@unique([name, description])
+}
+
+model FeatureFlagFilter {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now())
+  featureFlagId String
+  featureFlag   FeatureFlag @relation(fields: [featureFlagId], references: [id], onDelete: Cascade)
+  type          String // [FeatureFlagsFilterType] percentage, darkMode, language.is, page.is, analytics.browser.is...
+  value         String? // 0-100, true, false, en, de, fr, ...
+  action        String?
+}

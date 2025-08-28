@@ -63,12 +63,14 @@ If you encounter `ERESOLVE` errors during Vercel deployment, ensure:
    legacy-peer-deps=true
    ```
 
-3. **`vercel.json` file exists** with proper install command:
+3. **`vercel.json` file exists** with proper install command (without functions configuration):
    ```json
    {
      "buildCommand": "npm install --legacy-peer-deps && npm run build",
      "installCommand": "npm install --legacy-peer-deps"
    }
    ```
+   
+   **Note**: Do not include `functions` configuration in `vercel.json` for React Router v7 applications, as this is for traditional serverless functions only.
 
 These files ensure Vercel uses the correct dependency resolution strategy for React Router v7 nightly builds.

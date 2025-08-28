@@ -1,9 +1,4 @@
 {
   "buildCommand": "npm install --legacy-peer-deps && npm run build",
-  "installCommand": "npm install --legacy-peer-deps",
-  "functions": {
-    "app/entry.server.tsx": {
-      "includeFiles": "build/**"
-    }
-  }
+  "installCommand": "npm install --legacy-peer-deps"
 }

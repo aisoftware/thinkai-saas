@@ -11,6 +11,11 @@
 npm install
 ```
 
+**Note**: If you encounter dependency resolution errors, use:
+```
+npm install --legacy-peer-deps
+```
+
 💿 2) Duplicate `.env.example` file to &rarr; `.env`.
 
 ```
@@ -46,6 +51,57 @@ rm -rf package-lock.json node_modules
 npm cache verify
 npm install
 ```
+
+## Troubleshooting
+
+### Dependency Resolution Conflicts
+
+If you encounter `ERESOLVE` errors when running `npm install`, this is typically due to version conflicts between packages. Here are the steps to resolve them:
+
+**Option 1: Use Legacy Peer Dependencies (Recommended)**
+```bash
+npm install --legacy-peer-deps
+```
+
+**Option 2: Clean Installation**
+If the above doesn't work, perform a complete clean installation:
+
+```bash
+# Clear npm cache
+npm cache clean --force
+
+# Remove existing installation files
+rm -rf node_modules package-lock.json
+
+# Verify cache is clean
+npm cache verify
+
+# Install with legacy peer deps
+npm install --legacy-peer-deps
+```
+
+**Common Issues:**
+- **React Router version conflicts**: The project uses nightly builds of React Router packages that require compatible versions
+- **React 19 compatibility**: Some packages may not yet support React 19, requiring `--legacy-peer-deps`
+- **Node.js version**: The project is optimized for Node.js v20, though newer versions typically work with warnings
+
+**Note**: Using `--legacy-peer-deps` is safe and recommended for this project due to the cutting-edge React Router v7 implementation.
+
+**For future package installations**, always use:
+```bash
+npm install <package-name> --legacy-peer-deps
+```
+
+### Prisma Schema Location
+
+This project uses a modular Prisma schema located in `prisma/schema/` directory. The configuration is handled by:
+- **`prisma.config.ts`**: Modern Prisma configuration file specifying schema location
+- **`package.json`**: Contains seed script configuration (legacy)
+
+If you encounter "Could not find Prisma Schema" errors:
+1. Ensure [`prisma.config.ts`](file:///Users/larrybrooks/projects/saasrock/thinkai.com/prisma.config.ts) exists and points to the correct schema directory
+2. Run `npx prisma validate` to test schema detection
+3. Use `npx prisma generate` to regenerate the Prisma client
 
 ---
 

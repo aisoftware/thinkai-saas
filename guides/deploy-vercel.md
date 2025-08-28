@@ -4,7 +4,7 @@ Deploying to [Vercel](https://vercel.com/) might be the easiest way to deploy.
 
 - 1. Connect your GitHub project: [vercel.com/new](http://vercel.com/new)
 - 2. Set the environment variables
-- 3. Optional: You might need to override the build command to `npm install --legacy-peer-deps` if your project has peer dependencies issues.
+- 3. **Important**: This project uses React Router v7 nightly builds which require specific dependency resolution. The project includes `.npmrc` and `vercel.json` files to handle this automatically.
 
 That's it 🎉! Every deployment will have it's own URL.
 
@@ -43,3 +43,32 @@ Database region (in this case, Supabase):
 ![supabase-project-settings-region.png](https://qwcsbptoezmuwgyijrxp.supabase.co/storage/v1/object/public/novel/1721941075247-supabase-project-settings-region.png "supabase-project-settings-region.png")
 
 And redeploy if necessary.
+
+## **Troubleshooting**
+
+### React Router v7 Dependency Conflicts
+
+If you encounter `ERESOLVE` errors during Vercel deployment, ensure:
+
+1. **All React Router packages use the same nightly version** (check `package.json`):
+   ```json
+   "@react-router/dev": "^0.0.0-nightly-bf7ecb711-20240911",
+   "@react-router/node": "^0.0.0-nightly-bf7ecb711-20240911",
+   "@react-router/serve": "^0.0.0-nightly-bf7ecb711-20240911",
+   "@react-router/remix-config-routes-adapter": "^0.0.0-nightly-bf7ecb711-20240911"
+   ```
+
+2. **`.npmrc` file exists** with:
+   ```
+   legacy-peer-deps=true
+   ```
+
+3. **`vercel.json` file exists** with proper install command:
+   ```json
+   {
+     "buildCommand": "npm install --legacy-peer-deps && npm run build",
+     "installCommand": "npm install --legacy-peer-deps"
+   }
+   ```
+
+These files ensure Vercel uses the correct dependency resolution strategy for React Router v7 nightly builds.

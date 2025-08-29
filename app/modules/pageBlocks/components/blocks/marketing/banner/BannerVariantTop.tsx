@@ -38,22 +38,22 @@ export default function BannerVariantTop({ item, onClose }: { item: BannerBlockD
                       className="flex items-baseline space-x-1 text-sm font-medium hover:underline sm:text-base"
                     >
                       {!item.textMd && item.text ? (
-                        <span>{t(item.text)}</span>
+                        <span>{item.text}</span>
                       ) : (
                         <Fragment>
-                          {item.textMd && <span className="hidden md:block">{t(item.textMd)}</span>}
-                          {item.text && <span className="md:hidden">{t(item.text)}</span>}
+                          {item.textMd && <span className="hidden md:block">{item.textMd}</span>}
+                          {item.text && <span className="md:hidden">{item.text}</span>}
                         </Fragment>
                       )}
                     </ButtonEvent>
                   ) : (
                     <div className="flex items-baseline space-x-1 text-sm font-medium sm:text-base">
                       {!item.textMd && item.text ? (
-                        <span>{t(item.text)}</span>
+                        <span>{item.text}</span>
                       ) : (
                         <Fragment>
-                          {item.textMd && <span className="hidden md:block">{t(item.textMd)}</span>}
-                          {item.text && <span className="md:hidden">{t(item.text)}</span>}
+                          {item.textMd && <span className="hidden md:block">{item.textMd}</span>}
+                          {item.text && <span className="md:hidden">{item.text}</span>}
                         </Fragment>
                       )}
                     </div>

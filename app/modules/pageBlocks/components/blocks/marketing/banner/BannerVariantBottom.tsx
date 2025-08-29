@@ -23,8 +23,8 @@ export default function BannerVariantBottom({ item, onClose }: { item: BannerBlo
                     <MegaphoneIcon className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <p className="ml-3 truncate font-medium">
-                    {item.textMd && <span className="hidden md:block">{t(item.textMd)}</span>}
-                    {item.text && <span className="md:hidden">{t(item.text)}</span>}
+                    {item.textMd && <span className="hidden md:block">{item.textMd}</span>}
+                    {item.text && <span className="md:hidden">{item.text}</span>}
                   </p>
                 </div>
                 <div className="order-2 mt-0 flex w-auto shrink-0 space-x-1 md:space-x-2">
